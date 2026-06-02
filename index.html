@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎵 다온 음악 생성 스튜디오</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Decorative background glow elements -->
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+  <div class="bg-glow bg-glow-3"></div>
+
+  <div class="container">
+    <!-- Header Section -->
+    <header class="brand-header animate-fade-in">
+      <div class="brand-badge">Kaggle T4 GPU · Wan2GP + mmgp · INT8</div>
+      <h1 class="brand-title">🎵 다온 음악 생성 스튜디오</h1>
+      <p class="brand-subtitle">제작: <span>다온</span> | 전문 AI 음악 제작 스튜디오</p>
+    </header>
+
+    <!-- Connection Config Panel -->
+    <section class="config-panel glass-card animate-fade-in delay-1">
+      <div class="panel-header">
+        <h2>🔌 API 서버 연결 설정</h2>
+        <span id="connection-badge" class="badge badge-gray">연결 안 됨</span>
+      </div>
+      <div class="connection-form">
+        <input type="text" id="api-url-input" value="https://landing-automated-precision.ngrok-free.dev" placeholder="예시: https://xxxx-xxxx.ngrok-free.app (Ngrok 공개 주소)" aria-label="Ngrok API 서버 주소">
+        <button id="connect-btn" class="glow-btn-primary">서버 연결</button>
+      </div>
+      <div id="server-stats" class="server-stats hidden">
+        <div class="stat-badge">남은 VRAM: <span id="vram-val">- GB</span></div>
+        <div class="stat-badge">남은 RAM: <span id="ram-val">- GB</span></div>
+        <div class="stat-badge">서버 모델: <span id="model-val">-</span></div>
+      </div>
+    </section>
+
+    <!-- Main Workspace Layout -->
+    <main class="workspace-grid">
+      
+      <!-- Input Panel (Left Column) -->
+      <section class="input-panel glass-card animate-fade-in delay-2">
+        <div class="section-title-wrapper">
+          <span class="step-num">01</span>
+          <h3>스튜디오 제작 설정</h3>
+        </div>
+        
+        <form id="generator-form">
+          <!-- Audio Task Dropdown -->
+          <div class="form-group">
+            <label for="audio_task">🎯 음악 생성 모드</label>
+            <div class="custom-select-wrapper">
+              <select id="audio_task" name="audio_task">
+                <option value="Text (Lyrics) ➔ Audio" selected>가사 입력형 (Text ➔ Audio)</option>
+                <option value="Cover Mode of Source Audio">소스 오디오 커버 모드 (Cover Mode)</option>
+                <option value="Transfer Reference Audio Timbre">음색 참조 전송 (Timbre Transfer)</option>
+                <option value="Cover + Transfer Timbre">커버 + 음색 전송 (Cover + Timbre)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Lyrics Textarea -->
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <label for="lyrics" style="margin-bottom: 0;">🎤 가사 / 보컬 프롬프트</label>
+              <button type="button" id="inst-mode-btn" class="preset-btn" style="margin: 0; padding: 4px 10px; font-size: 11px; background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.3); color: #06b6d4; border-radius: 8px; cursor: pointer; transition: var(--transition-smooth);">🎹 연주곡(반주) 모드 켜기</button>
+            </div>
+            <textarea id="lyrics" name="lyrics" rows="6" placeholder="[Verse]
+여기에 노래 가사를 입력하세요...
+
+가사 없는 반주 음악을 원하시면 [Instrumental]을 입력하세요.">[Verse]
+I wake up every morning, feeling alive
+The world outside is bright, the sun is on my side
+
+[Chorus]
+We're dancing through the fire
+Rising ever higher
+Nothing's gonna stop us now</textarea>
+            <span class="help-text">보컬 없는 반주 음악을 원하시면 <strong>[Instrumental]</strong>을 입력하세요.</span>
+          </div>
+
+          <!-- Caption Input -->
+          <div class="form-group">
+            <label for="caption">🎶 음악 스타일 및 분위기 (캡션)</label>
+            
+            <!-- Global Artist Style Matcher Input Row -->
+            <div class="artist-search-wrapper">
+              <div class="artist-search-row">
+                <input type="text" id="artist-search-input" placeholder="아티스트명 입력 (예: IU, Bruno Mars, NewJeans, BTS)" aria-label="글로벌 아티스트명">
+                <button type="button" id="artist-search-btn" class="glow-btn-primary search-btn">스타일 분석 🔍</button>
+              </div>
+              <div id="artist-tags-preview" class="artist-tags-preview hidden">
+                <span class="preview-label">감지된 태그:</span>
+                <div id="detected-tags-list"></div>
+              </div>
+            </div>
+
+            <div class="preset-container">
+              <button type="button" class="preset-btn" data-value="pop, female vocal, catchy, upbeat, synth, 120 BPM, polished production">어반 팝 🎵</button>
+              <button type="button" class="preset-btn" data-value="cinematic orchestral, epic, slow tempo, strings, brass, emotional, film score, 80 BPM">영화 OST 🎬</button>
+              <button type="button" class="preset-btn" data-value="lo-fi hip hop, chill, mellow, vinyl crackle, piano, jazzy chords, 85 BPM, intimate">로파이 ☕</button>
+              <button type="button" class="preset-btn" data-value="rock, electric guitar, powerful drums, male vocal, energetic, 130 BPM, punchy, dry mix">강렬한 록 🎸</button>
+            </div>
+            <textarea id="caption" name="caption" rows="3" placeholder="장르, 악기 구성, 분위기, 템포 등을 묘사하세요. (영어 입력 권장)">Dreamy synth-pop with shimmering pads, soft vocals, and a slow dance groove.</textarea>
+          </div>
+
+          <!-- Quick Parameters (BPM, Keys, Duration, Tracks) -->
+          <div class="row">
+            <div class="form-group col">
+              <label for="bpm">🥁 BPM (30-300)</label>
+              <input type="text" id="bpm" name="bpm" placeholder="자동 지정" value="">
+            </div>
+            <div class="form-group col">
+              <label for="keyscale">🎹 키/조 (KeyScale)</label>
+              <input type="text" id="keyscale" name="keyscale" placeholder="예시: C major, A minor (영어 입력)" value="">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="form-group col">
+              <label for="timesignature">🎼 박자 (Time Signature)</label>
+              <select id="timesignature" name="timesignature">
+                <option value="">자동 지정</option>
+                <option value="2">2/4 박자</option>
+                <option value="3">3/4 박자</option>
+                <option value="4">4/4 박자</option>
+                <option value="6">6/8 박자</option>
+              </select>
+            </div>
+            <div class="form-group col">
+              <label for="language">🌐 가창 언어 (Language)</label>
+              <div class="custom-select-wrapper">
+                <select id="language" name="language">
+                  <option value="" selected>자동 지정</option>
+                  <option value="ko">한국어 (ko)</option>
+                  <option value="en">영어 (en)</option>
+                  <option value="ja">일본어 (ja)</option>
+                  <option value="zh">중국어 (zh)</option>
+                  <option value="fr">프랑스어 (fr)</option>
+                  <option value="de">독일어 (de)</option>
+                  <option value="es">스페인어 (es)</option>
+                  <option value="pt">포르투갈어 (pt)</option>
+                  <option value="it">이탈리아어 (it)</option>
+                  <option value="ru">러시아어 (ru)</option>
+                  <option value="ar">아랍어 (ar)</option>
+                  <option value="hi">힌디어 (hi)</option>
+                  <option value="th">태국어 (th)</option>
+                  <option value="vi">베트남어 (vi)</option>
+                  <option value="id">인도네시아어 (id)</option>
+                  <option value="tr">터키어 (tr)</option>
+                  <option value="pl">폴란드어 (pl)</option>
+                  <option value="nl">네덜란드어 (nl)</option>
+                  <option value="sv">스웨덴어 (sv)</option>
+                  <option value="fi">핀란드어 (fi)</option>
+                  <option value="da">덴마크어 (da)</option>
+                  <option value="no">노르웨이어 (no)</option>
+                  <option value="cs">체코어 (cs)</option>
+                  <option value="ro">루마니아어 (ro)</option>
+                  <option value="hu">헝가리어 (hu)</option>
+                  <option value="el">그리스어 (el)</option>
+                  <option value="he">히브리어 (he)</option>
+                  <option value="fa">페르시아어 (fa)</option>
+                  <option value="ur">우르두어 (ur)</option>
+                  <option value="bn">벤갈어 (bn)</option>
+                  <option value="ta">타밀어 (ta)</option>
+                  <option value="te">텔루구어 (te)</option>
+                  <option value="unknown">기타 (unknown)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="form-group col">
+              <label for="vocal_gender">🎤 보컬 성향 선택 (Vocal Type)</label>
+              <div class="custom-select-wrapper">
+                <select id="vocal_gender" name="vocal_gender">
+                  <option value="" selected>자동 지정 (프롬프트 따름)</option>
+                  <option value="female">여성 보컬 (Female Vocal)</option>
+                  <option value="male">남성 보컬 (Male Vocal)</option>
+                  <option value="choir">합창/코러스 (Choir/Chorus)</option>
+                  <option value="none">보컬 없음 (연주곡/Instrumental)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="duration">⏱️ 음악 길이: <span id="duration-val">120</span>초</label>
+            <input type="range" id="duration" name="duration" min="5" max="360" value="120" class="custom-slider">
+          </div>
+
+          <div class="form-group">
+            <label for="num_tracks">🔢 생성할 트랙 개수: <span id="tracks-val">1</span>개</label>
+            <input type="range" id="num_tracks" name="num_tracks" min="1" max="4" value="1" class="custom-slider">
+            <span class="help-text text-purple">동시에 여러 개의 버전을 차례대로 생성합니다 (시드값, 시드값+1, 시드값+2...).</span>
+          </div>
+
+          <!-- Advanced Settings Accordion -->
+          <div class="accordion">
+            <button type="button" class="accordion-trigger">
+              <span>⚙️ 고급 설정 (Advanced Settings)</span>
+              <svg class="chevron" viewBox="0 0 24 24"><path fill="currentColor" d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"/></svg>
+            </button>
+            <div class="accordion-content">
+              <div class="row">
+                <div class="form-group col">
+                  <label for="seed">🎲 시드 (Seed)</label>
+                  <input type="number" id="seed" name="seed" value="-1" step="1">
+                  <span class="help-text">랜덤은 -1 입력</span>
+                </div>
+                <div class="form-group col">
+                  <label for="num_steps">🔄 추론 단계 (Steps, 1-50)</label>
+                  <input type="number" id="num_steps" name="num_steps" min="1" max="50" value="8">
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="form-group col">
+                  <label for="guidance_scale">📏 가이드 스케일 (Guidance Scale)</label>
+                  <input type="number" id="guidance_scale" name="guidance_scale" min="0" max="15" value="7.0" step="0.1">
+                </div>
+                <div class="form-group col">
+                  <label for="temperature">🌡️ 온도 (Temperature)</label>
+                  <input type="number" id="temperature" name="temperature" min="0" max="2" value="1.0" step="0.05">
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="form-group col">
+                  <label for="audio_scale">🎚️ 커버 강도 (Cover Strength)</label>
+                  <input type="number" id="audio_scale" name="audio_scale" min="0" max="1" value="1.0" step="0.05">
+                </div>
+                <div class="form-group col">
+                  <label for="shift">📐 시프트 (Shift)</label>
+                  <input type="number" id="shift" name="shift" min="0" max="5" value="1.0" step="0.1">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>🧮 추론 방식 (Inference Method)</label>
+                <div class="radio-group">
+                  <label class="radio-label">
+                    <input type="radio" name="infer_method" value="ode" checked>
+                    <span>ODE (속도 빠름, 기본값)</span>
+                  </label>
+                  <label class="radio-label">
+                    <input type="radio" name="infer_method" value="sde">
+                    <span>SDE (디테일/질감 우수)</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="negative_prompt">🚫 네거티브 프롬프트 (제외할 키워드)</label>
+                <input type="text" id="negative_prompt" name="negative_prompt" placeholder="vocals, low quality, noisy..." value="">
+              </div>
+
+              <div class="form-group">
+                <label for="lastfm_api_key">🔑 Last.fm API Key</label>
+                <input type="text" id="lastfm_api_key" placeholder="Last.fm API Key (생략 시 기본 공용 키 사용)" value="75d20fb472be99275392aefa2760ea09">
+              </div>
+            </div>
+          </div>
+
+          <!-- Trigger Button -->
+          <button type="submit" id="generate-btn" class="glow-btn-primary full-width margin-top-md" disabled>
+            <span>🎵 AI 음악 생성 시작</span>
+          </button>
+        </form>
+      </section>
+
+      <!-- Reference Audios & Generation Progress (Right Column) -->
+      <div class="workspace-right-column">
+        
+        <!-- Reference Audio Upload Panel (Hidden by default, shown based on mode) -->
+        <section id="ref-audio-panel" class="ref-audio-panel glass-card hidden animate-fade-in">
+          <div class="section-title-wrapper">
+            <span class="step-num">02</span>
+            <h3>참조용 오디오 파일 업로드</h3>
+          </div>
+          
+          <!-- Source Audio Cover Mode -->
+          <div id="source-audio-group" class="form-group hidden">
+            <label>🎵 소스 오디오 (커버 모드용)</label>
+            <div class="upload-drop-zone" id="source-drop-zone">
+              <svg class="upload-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M14,13V17H10V13H7L12,8L17,13H14M19.35,10.03C18.67,6.59 15.64,4 12,4C9.11,4 6.6,5.64 5.35,8.03C2.34,8.36 0,10.9 0,14A6,6 0 0,0 6,20H19A5,5 0 0,0 24,15C24,12.36 21.95,10.22 19.35,10.03Z"/></svg>
+              <div class="upload-text">파일을 드래그 앤 드롭하거나 클릭하여 업로드</div>
+              <input type="file" id="audio_ref" accept="audio/*" class="hidden-file-input">
+            </div>
+            <div id="source-preview" class="audio-preview-container hidden">
+              <span class="file-name" id="source-file-name">파일명.mp3</span>
+              <audio id="source-audio-player" controls></audio>
+              <button type="button" class="remove-file-btn" id="remove-source-btn">삭제</button>
+            </div>
+          </div>
+
+          <!-- Timbre Timbre Reference -->
+          <div id="timbre-audio-group" class="form-group hidden">
+            <label>🎙️ 음색 참조 오디오 (음색 전송용)</label>
+            <div class="upload-drop-zone" id="timbre-drop-zone">
+              <svg class="upload-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M14,13V17H10V13H7L12,8L17,13H14M19.35,10.03C18.67,6.59 15.64,4 12,4C9.11,4 6.6,5.64 5.35,8.03C2.34,8.36 0,10.9 0,14A6,6 0 0,0 6,20H19A5,5 0 0,0 24,15C24,12.36 21.95,10.22 19.35,10.03Z"/></svg>
+              <div class="upload-text">파일을 드래그 앤 드롭하거나 클릭하여 업로드</div>
+              <input type="file" id="audio_ref_timbre" accept="audio/*" class="hidden-file-input">
+            </div>
+            <div id="timbre-preview" class="audio-preview-container hidden">
+              <span class="file-name" id="timbre-file-name">파일명.mp3</span>
+              <audio id="timbre-audio-player" controls></audio>
+              <button type="button" class="remove-file-btn" id="remove-timbre-btn">삭제</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Generation Progress Panel (Only visible during active generation) -->
+        <section id="progress-panel" class="progress-panel glass-card hidden">
+          <div class="panel-header">
+            <h3>⚡ 음악 트랙 생성 중...</h3>
+            <span class="timer" id="generation-timer">00:00</span>
+          </div>
+          
+          <div class="progress-status-container">
+            <div class="spinner-wrapper">
+              <div class="circle-spinner"></div>
+              <div class="progress-percent" id="progress-percent-label">0%</div>
+            </div>
+            <div class="progress-text-info">
+              <div class="status-desc" id="status-desc-text">서버 대기열 대기 중...</div>
+              <div class="progress-track" id="progress-track-indicator">트랙 1/1</div>
+            </div>
+          </div>
+          
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%"></div>
+          </div>
+          
+          <button type="button" id="cancel-btn" class="btn-secondary">생성 취소</button>
+        </section>
+
+        <!-- Results Studio Panel -->
+        <section class="results-panel glass-card animate-fade-in delay-3">
+          <div class="section-title-wrapper" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span class="step-num">03</span>
+              <h3>스튜디오 음악 생성 결과물</h3>
+            </div>
+            <button type="button" id="clear-all-btn" class="preset-btn hidden" style="margin: 0; padding: 4px 10px; font-size: 11px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; border-radius: 8px;">전체 삭제 🗑️</button>
+          </div>
+          
+          <div id="empty-results" class="empty-results">
+            <div class="music-wave-placeholder">
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <p>생성 준비 완료. 옵션을 설정한 뒤 음악 생성 시작 버튼을 눌러주세요.</p>
+          </div>
+
+          <div id="tracks-list" class="tracks-list hidden">
+            <!-- Dynamic Track items will be appended here -->
+          </div>
+        </section>
+
+        <!-- AI Album Cover Maker Studio Panel -->
+        <section class="cover-maker-panel glass-card animate-fade-in delay-3" style="margin-top: 24px;">
+          <div class="section-title-wrapper" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span class="step-num" style="background: linear-gradient(135deg, #f6c754 0%, #b8871b 100%);">🎨</span>
+              <h3>다온 AI 앨범 커버 메이커</h3>
+            </div>
+          </div>
+          
+          <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 20px;">작성하신 가사의 감성과 음악 스타일을 지능적으로 자체 분석하여 1:1 고해상도 자켓 아트를 즉시 완성합니다.</p>
+
+          <div class="cover-generator-workspace" style="display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center;">
+            <!-- Cover Art Display Frame (Enlarged to 280x280!) -->
+            <div class="cover-frame-wrapper" style="position: relative; width: 280px; height: 280px; background: rgba(0,0,0,0.4); border: 2px dashed rgba(255,255,255,0.12); border-radius: 16px; overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: var(--transition-smooth);">
+              <!-- Shimmer Loader Skeleton -->
+              <div id="cover-skeleton" class="shimmer-loader hidden" style="position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite;"></div>
+              
+              <!-- Placeholder Icon -->
+              <div id="cover-placeholder" class="cover-placeholder" style="display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--text-muted);">
+                <svg width="48" height="48" viewBox="0 0 24 24"><path fill="currentColor" d="M19,19H5V5H19M19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 21,3M13.96,12.29L11.21,15.83L9.25,13.47L6.5,17H17.5L13.96,12.29Z"/></svg>
+                <span style="font-size: 13px; font-weight:600; color: var(--text-secondary);">가사에 맞춰 자켓이 이곳에 완성됩니다</span>
+              </div>
+              
+              <!-- Result Image Tag -->
+              <img id="cover-result-img" class="hidden" src="" alt="AI Album Art Cover" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+
+            <!-- Album Cover Style Select -->
+            <div class="form-group" style="width: 100%; max-width: 320px; text-align: left; margin-bottom: 0;">
+              <label for="cover-style-select" style="font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.6); margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.5px;">🎨 앨범 커버 테마/화풍 스타일</label>
+              <div class="custom-select-wrapper" style="position: relative;">
+                <select id="cover-style-select" style="width: 100%; background: rgba(0, 0, 0, 0.35); border: 1px solid var(--border-color); border-radius: 12px; padding: 10px 14px; color: var(--text-primary); font-size: 13px; outline: none; appearance: none; -webkit-appearance: none; cursor: pointer;">
+                  <option value="auto" selected>✨ AI 자동 테마 매칭 (가사 분석)</option>
+                  <option value="photo">📸 감성 실사 사진 (Emotional Photo)</option>
+                  <option value="watercolor">🎨 아늑한 수채화 일러스트 (Watercolor)</option>
+                  <option value="oil">🖌️ 빈티지 질감 유화 (Classic Oil Painting)</option>
+                  <option value="vector">📐 미니멀 벡터 그래픽 (Minimalist Vector)</option>
+                  <option value="pop">⚡ 트렌디한 레트로 신스팝 (Pop / Neon Wave)</option>
+                  <option value="fantasy">🌌 환상적인 몽환 판타지 (Dreamy / Ethereal)</option>
+                  <option value="ink">✍ 모던한 수묵/일러스트 (Ink Drawing)</option>
+                </select>
+                <style>
+                  #cover-style-select option {
+                    background-color: #120c24;
+                    color: var(--text-primary);
+                  }
+                </style>
+              </div>
+            </div>
+
+            <!-- Controls and instructions -->
+            <div class="cover-maker-controls" style="display: flex; gap: 12px; width: 100%; max-width: 320px; justify-content: center; align-items: center;">
+              <button type="button" id="generate-cover-btn" class="glow-btn-primary" style="padding: 12px 24px; font-size: 14px; font-weight: 700; flex: 1; background: linear-gradient(135deg, #f6c754 0%, #b8871b 100%); box-shadow: 0 4px 15px rgba(245, 192, 62, 0.15); color: #07040e;">🎨 가사 기반 AI 커버 생성</button>
+              <button type="button" id="download-cover-btn" class="btn-secondary hidden" style="padding: 11px 18px; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;" title="커버 다운로드">
+                <svg width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/></svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2026 다온. All rights reserved. Powered by Daon Music Studio.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

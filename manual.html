@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📖 다온 AI 음악 생성 스튜디오 사용설명서 & 프롬프트 가이드</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #07040e;
+      --bg-card: rgba(18, 13, 36, 0.6);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --accent-purple: #a855f7;
+      --accent-pink: #ec4899;
+      --accent-cyan: #06b6d4;
+      --text-primary: #f3f0fa;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      --highlight: #d8b4fe;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      line-height: 1.6;
+      padding: 40px 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Background glows */
+    .bg-glow {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(140px);
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0.3;
+    }
+    .bg-glow-1 {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(6, 182, 212, 0.3) 0%, transparent 70%);
+      top: -10%;
+      right: -10%;
+    }
+    .bg-glow-2 {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(168, 85, 247, 0.3) 0%, transparent 70%);
+      bottom: -10%;
+      left: -10%;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* Header styling */
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .badge {
+      display: inline-block;
+      background: linear-gradient(135deg, rgba(245, 192, 62, 0.15) 0%, rgba(184, 135, 20, 0.15) 100%);
+      border: 1px solid rgba(245, 192, 62, 0.35);
+      padding: 6px 16px;
+      border-radius: 30px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #ffe395;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.3rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 10%, #f6c754 50%, #b8871b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+    }
+    .subtitle {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+    }
+
+    /* Cards styling */
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      margin-bottom: 24px;
+    }
+    h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 12px;
+    }
+    h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #d8b4fe;
+      margin-top: 24px;
+      margin-bottom: 10px;
+    }
+
+    /* Content styling */
+    p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+    strong {
+      color: #fff;
+    }
+
+    /* Preset blocks */
+    .preset-example {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 15px 0;
+    }
+    .preset-title {
+      font-weight: 700;
+      color: var(--accent-cyan);
+      margin-bottom: 8px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    /* Code/Tags styling */
+    .tag-box {
+      background: rgba(168, 85, 247, 0.1);
+      border: 1px solid rgba(168, 85, 247, 0.2);
+      color: #e9d5ff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    .lyric-box {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 13px;
+    }
+    th, td {
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background: rgba(168, 85, 247, 0.1);
+      color: #fff;
+      font-weight: 700;
+    }
+    td strong {
+      color: #e9d5ff;
+    }
+
+    /* List styling */
+    ul, ol {
+      margin-left: 20px;
+      margin-bottom: 12px;
+    }
+    li {
+      margin-bottom: 6px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .alert {
+      background: rgba(6, 182, 212, 0.08);
+      border-left: 4px solid var(--accent-cyan);
+      border-radius: 4px 12px 12px 4px;
+      padding: 16px;
+      margin: 15px 0;
+      font-size: 13px;
+    }
+    .alert-title {
+      font-weight: 700;
+      color: #93c5fd;
+      margin-bottom: 6px;
+    }
+
+    .nav-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 30px;
+    }
+    .nav-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      padding: 10px 20px;
+      border-radius: 12px;
+      color: var(--text-primary);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    .nav-btn:hover {
+      background: var(--accent-purple);
+      border-color: var(--accent-purple);
+      box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+      color: #fff;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 50px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="badge">다온 사용설명서 & 활용 가이드</div>
+      <h1>📖 다온 AI 음악 스튜디오 사용설명서</h1>
+      <p class="subtitle">AI 음악 작곡가처럼 고품질 음악을 뽑아내는 프롬프트 작성 공식과 꿀팁</p>
+    </header>
+
+    <!-- Card 1: Basic Usage -->
+    <section class="card">
+      <h2>🎵 기본 사용 방법 설명</h2>
+      <p>연결 배지가 녹색(연결됨)으로 활성화된 것을 확인한 뒤 아래 흐름대로 입력하여 음악을 만듭니다.</p>
+      <ol style="margin-left: 20px; margin-top: 10px;">
+        <li><strong>음악 생성 모드 선택:</strong> 가사로 곡을 쓸지, 소스 음악을 커버할지 선택합니다.</li>
+        <li><strong>가사 / 보컬 프롬프트 작성:</strong> 보컬이 부를 가사를 입력합니다.</li>
+        <li><strong>음악 스타일 및 분위기 (캡션) 작성:</strong> 곡의 장르, 악기, 분위기 등을 영어 키워드로 작성합니다. (프리셋 버튼을 누르면 자동 입력됩니다.)</li>
+        <li><strong>세부 파라미터 설정:</strong> 박자, 가창 언어, 트랙 길이, 동시 생성 곡 수를 지정합니다.</li>
+        <li><strong>AI 음악 생성 시작:</strong> 클릭하면 우측 상태창에 진행 퍼센트가 나타나며 음악 생성이 시작됩니다.</li>
+      </ol>
+    </section>
+
+    <!-- Card 1-2: Audio Generation Modes -->
+    <section class="card">
+      <h2>🎯 4가지 음악 생성 모드 상세 가이드</h2>
+      <p>다온 AI 음악 스튜디오는 단순 텍스트 작곡뿐만 아니라 기존 곡 커버 및 목소리 복사 기능을 지원합니다.</p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 25%;">생성 모드</th>
+            <th style="width: 35%;">설명</th>
+            <th style="width: 40%;">필요한 업로드 파일 및 조절 파라미터</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>가사 입력형<br>(Text ➔ Audio)</strong></td>
+            <td>텍스트 가사와 스타일 캡션을 기반으로 완전한 곡을 밑바닥부터 새로 생성하는 기본 모드입니다.</td>
+            <td>업로드 파일 없음. 가사와 스타일 캡션만 입력하여 진행합니다.</td>
+          </tr>
+          <tr>
+            <td><strong>소스 오디오 커버 모드<br>(Cover Mode)</strong></td>
+            <td>업로드한 음악 파일(소스 오디오)의 멜로디 라인과 박자 뼈대를 그대로 보존하면서, 캡션에 지정한 완전히 새로운 장르나 악기로 편곡 및 커버를 진행합니다.</td>
+            <td><strong>소스 오디오</strong> 업로드 필요.<br><strong>커버 강도 (Cover Strength)</strong>로 원곡 보존 정도를 세부 조절합니다.</td>
+          </tr>
+          <tr>
+            <td><strong>음색 참조 전송<br>(Timbre Transfer)</strong></td>
+            <td>업로드한 보컬 목소리 파일(음색 참조 오디오)의 음색 특징을 학습하여, 새롭게 생성되는 가사 곡의 보컬 목소리를 해당 가수의 목소리와 유사하게 생성합니다.</td>
+            <td><strong>음색 참조 오디오</strong> 업로드 필요.<br>특정 목소리(남성/여성 등)를 지향하고 싶을 때 유용합니다.</td>
+          </tr>
+          <tr>
+            <td><strong>커버 + 음색 전송<br>(Cover + Timbre)</strong></td>
+            <td>원곡의 멜로디와 박자 구조를 유지하면서(커버), 보컬 목소리만 지정한 목소리 파일의 음색으로 복사하여 노래를 부르도록 결합하는 최종 결합 모드입니다.</td>
+            <td><strong>소스 오디오</strong> 및 <strong>음색 참조 오디오</strong> 둘 다 업로드 필요.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Card 2: Prompt Secret Formula -->
+    <section class="card">
+      <h2>💡 대박 품질을 위한 프롬프트 작성 공식</h2>
+      <p>원하는 퀄리티의 음악을 얻으려면 <strong>'스타일 캡션 태그'</strong>와 <strong>'가사의 구조'</strong>를 정확히 조합해 주어야 합니다.</p>
+
+      <h3>1. 스타일 캡션(Caption) 태그 공식</h3>
+      <p>단어로 구성된 영어 단어를 쉼표(,)로 나열해 입력할 때 최고의 음악을 반환합니다. 다음 조합법을 추천합니다.</p>
+      <div class="tag-box">
+        [장르] , [주요 악기] , [분위기/감정] , [템포/BPM] , [보컬 성향 및 믹싱 스타일]
+      </div>
+      <p style="font-size: 13px; color: var(--text-secondary);">
+        * <strong>예시:</strong> <code>pop, acoustic guitar, emotional, slow, female vocal, clean mix</code> (잔잔하고 감성적인 여성 보컬 팝)
+      </p>
+
+      <h3>2. 가사(Lyrics) 구조화 공식</h3>
+      <p>가사 사이에 대괄호`[ ]`를 넣어 음악의 단락(기승전결)을 명시하면 인공지능이 그 단락의 텐션에 맞춰 보컬을 노래하게 만들 수 있습니다.</p>
+      <ul>
+        <li><strong>[Intro]:</strong> 노래의 전주 부분입니다. (보통 연주만 흘러나옴)</li>
+        <li><strong>[Verse 1], [Verse 2]:</strong> 곡의 도입부 가사 구간입니다. (차분하게 부름)</li>
+        <li><strong>[Chorus]:</strong> 곡의 하이라이트(후렴구) 구간입니다. (에너지가 가장 올라감)</li>
+        <li><strong>[Guitar Solo] / [Instrumental Solo]:</strong> 가창 보컬을 멈추고 연주(솔로)를 채워 넣는 구간입니다.</li>
+        <li><strong>[Outro]:</strong> 노래의 후주(종결) 부분입니다. (서서히 페이드아웃되거나 멈춤)</li>
+      </ul>
+
+      <div class="alert">
+        <div class="alert-title">🎤 보컬 세부 묘사 꿀팁</div>
+        <div class="alert-content">
+          - <strong>배경음 / 메아리:</strong> 가사 옆에 소괄호를 붙여 <code>(oh yeah)</code>, <code>(back vocals)</code> 처럼 작성하면 멋진 코러스가 붙습니다.
+          <br>
+          - <strong>반주만 생성:</strong> 가사 입력 영역 우측 상단의 <strong>🎹 연주곡(반주) 모드 켜기</strong> 버튼을 누르면 원클릭으로 <code>[Instrumental]</code>이 자동 기입되며, 고급설정의 제외 단어(Negative Prompt)에도 보컬 제거 키워드가 설정되어 깨끗한 악기 연주곡이 만들어집니다. (버튼을 다시 누르면 원본 가사로 원터치 복원됩니다.)
+        </div>
+      </div>
+    </section>
+
+    <!-- Card 3: Presets Detail -->
+    <section class="card">
+      <h2>🔥 장르별 바로 쓰는 실전 프리셋 세트</h2>
+      <p>원하는 분위기를 골라 캡션창과 가사창에 그대로 넣고 테스트해 보세요.</p>
+
+      <!-- Preset 1 -->
+      <div class="preset-example">
+        <div class="preset-title">🎵 1. 어반 팝 (대중적인 가요/케이팝 스타일)</div>
+        <div class="tag-box">pop, female vocal, catchy, upbeat, synth, 120 BPM, polished production</div>
+        <div class="lyric-box">[Intro]
+[Verse 1]
+어두운 도시의 불빛 사이로,
+홀로 걷는 나의 발걸음 위에,
+너의 따스한 기억이 닿을 때,
+비로소 나는 웃을 수 있어.
+
+[Chorus]
+우리는 밤을 날아올라 (날아올라)
+그 어떤 슬픔도 다 잊은 채로
+영원한 빛을 향해 달려가!</div>
+      </div>
+
+      <!-- Preset 2 -->
+      <div class="preset-example">
+        <div class="preset-title">🎸 2. 강렬한 모던 록 (에너지 넘치는 드러밍)</div>
+        <div class="tag-box">rock, electric guitar, powerful drums, male vocal, energetic, 130 BPM, punchy, dry mix</div>
+        <div class="lyric-box">[Intro]
+[Verse 1]
+I wake up to the screaming sound,
+Broken chains upon the ground.
+Now I'm ready for the fight,
+Shouting out into the night!
+
+[Chorus]
+WE WILL BREAK THE WALL!
+Never back down, standing tall!
+[Guitar Solo]
+[Outro]</div>
+      </div>
+
+      <!-- Preset 3 -->
+      <div class="preset-example">
+        <div class="preset-title">☕ 3. 칠한 로파이 (카페 음악/Chill Beat)</div>
+        <div class="tag-box">lo-fi hip hop, chill, mellow, vinyl crackle, piano, jazzy chords, 85 BPM, intimate</div>
+        <div class="lyric-box">[Intro]
+[Instrumental]
+[Verse]
+늦은 밤 조용한 방 안에서,
+흘러나오는 재즈 피아노 소리.
+모든 걱정은 잠시 내려놓고,
+이 멜로디에 취해 쉬어가.
+[Outro]</div>
+      </div>
+    </section>
+
+    <!-- Card 4: Parameter Guide -->
+    <section class="card">
+      <h2>⚙️ 초보자를 위한 파라미터(설정값) 완전 이해</h2>
+      <p>고급 설정 메뉴에 있는 용어들이 복잡하다면 아래 표를 참조하여 세팅을 조절하세요.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>설정 항목</th>
+            <th>기본값</th>
+            <th>쉽게 이해하는 조절 방법</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>시드 (Seed)</strong></td>
+            <td>-1</td>
+            <td>음악의 고유 번호입니다. <strong>-1</strong>은 매번 완전 랜덤으로 노래를 만듭니다. 마음에 드는 노래가 나왔다면 그 곡의 시드값을 적어두었다가 재활용하여 비슷한 스타일을 변형할 수 있습니다.</td>
+          </tr>
+          <tr>
+            <td><strong>추론 단계 (Steps)</strong></td>
+            <td>8</td>
+            <td>AI가 음악의 음질을 개선해 나가는 반복 횟수입니다. 8~12 정도로 설정할 때 가장 빠르고 음질이 조화롭습니다. 너무 크면 시간이 오래 걸립니다.</td>
+          </tr>
+          <tr>
+            <td><strong>가이드 스케일 (Guidance Scale)</strong></td>
+            <td>7.0</td>
+            <td>AI가 작성하신 <strong>텍스트 캡션에 얼마나 엄격하게 맞출지</strong> 결정합니다. 값이 높을수록 설정된 장르에 충실하지만 음색의 창의성은 줄어듭니다. 보통 5.0 ~ 9.0 사이를 추천합니다.</td>
+          </tr>
+          <tr>
+            <td><strong>온도 (Temperature)</strong></td>
+            <td>1.0</td>
+            <td>멜로디의 <strong>랜덤성/창의성</strong>을 조절합니다. 1.0보다 높이면 예상치 못한 화려하고 창의적인 멜로디를 구성하지만 가끔 불협화음이 날 수 있고, 낮추면 차분하고 일정한 음계로 노래합니다.</td>
+          </tr>
+          <tr>
+            <td><strong>커버 강도 (Cover Strength)</strong></td>
+            <td>1.0</td>
+            <td><strong>커버 모드</strong> 사용 시, 원래 입력된 오디오 구조를 얼마나 보존할지 결정합니다. 1.0에 가까울수록 원곡의 멜로디 뼈대를 그대로 보존한 채 스타일만 바꿉니다. 값이 낮을수록 AI가 더 창의적으로 멜로디를 재구성합니다.</td>
+          </tr>
+          <tr>
+            <td><strong>보컬 성향 선택 (Vocal Type)</strong></td>
+            <td>자동 지정</td>
+            <td>캡션 프롬프트를 번거롭게 수정하지 않아도, 원버튼으로 보컬 성향(<strong>여성 보컬, 남성 보컬, 합창/코러스, 보컬 없음(연주곡)</strong>)을 간편하게 지정합니다. 캡션에 관련 키워드가 프로그램적으로 자동 삽입되어 보컬 유형을 완벽 통제합니다.</td>
+          </tr>
+          <tr>
+            <td><strong>시프트 (Shift)</strong></td>
+            <td>1.0</td>
+            <td>오디오의 주파수 스펙트럼(음역대)을 이동시키는 값입니다. 낮출수록 묵직한 저음(Bass)이 보강되며, 높일수록 밝고 카랑카랑한 고음역대가 강조됩니다. 보통 1.0 ~ 2.0 사이로 설정하는 것을 추천합니다.</td>
+          </tr>
+          <tr>
+            <td><strong>추론 방식 (Inference Method)</strong></td>
+            <td>ODE</td>
+            <td>음악을 생성하는 수학적 샘플링 방식입니다.<br>- <strong>ODE:</strong> 빠른 생성 속도와 선명하고 깔끔하게 딱 떨어지는 멜로디가 특징입니다.<br>- <strong>SDE:</strong> 생성 속도는 약간 더 걸릴 수 있으나 아날로그 질감과 미세한 잔향이 우수한 사운드를 들려줍니다.</td>
+          </tr>
+          <tr>
+            <td><strong>네거티브 프롬프트 (Negative Prompt)</strong></td>
+            <td>(비어 있음)</td>
+            <td>AI 음악 생성 시 <strong>배제하고 싶은 스타일이나 잡음 요소</strong>를 영단어로 지정합니다. 예: 보컬을 제외한 연주곡으로만 정제하고 싶을 때 <code>vocals</code>를 추가하거나, <code>noisy, low quality, glitch</code> 등을 적어 기계적인 잡음을 필터링할 수 있습니다.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Navigation buttons -->
+    <div class="nav-buttons">
+      <a href="guide.html" class="nav-btn">◀ 1단계: 설치/연동 가이드 보기</a>
+      <a href="index.html" class="nav-btn">🌐 메인 음악 스튜디오 가기</a>
+    </div>
+
+    <footer>
+      <p>&copy; 2026 다온. All rights reserved. Powered by Daon Music Studio.</p>
+    </footer>
+  </div>
+</body>
+</html>

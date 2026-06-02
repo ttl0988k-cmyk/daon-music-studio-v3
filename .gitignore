@@ -1,0 +1,22 @@
+# System files
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Local env files
+.env
+.env.local
+
+# Python/Jupyter
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
