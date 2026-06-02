@@ -584,7 +584,7 @@ function createTrackCard(trackNum, seed, downloadUrl) {
   });
 
   // Playback logic setup
-  const audio = new Audio(downloadUrl);
+  const audio = new Audio();
   card.audioObj = audio;
   const playBtn = player.querySelector(".play-pause-btn");
   const playIcon = playBtn.querySelector(".play-icon");
@@ -599,14 +599,68 @@ function createTrackCard(trackNum, seed, downloadUrl) {
   let isMuted = false;
   let preMuteVolume = 0.8;
   audio.volume = 0.8;
+  
+  // Fetch audio as blob in background to bypass Ngrok browser warning and CORS issues on mobile devices
+  let audioBlobUrl = null;
+  let isAudioLoaded = false;
+  
+  // Visual feedback for loading audio
+  playBtn.disabled = true;
+  playBtn.style.opacity = "0.5";
+  playBtn.style.cursor = "wait";
+  playBtn.title = "오디오 로딩 중...";
+  
+  async function loadAudioBlob() {
+    try {
+      const response = await fetch(downloadUrl, {
+        headers: {
+          "ngrok-skip-browser-warning": "69420"
+        }
+      });
+      if (!response.ok) throw new Error("Audio network response was not ok");
+      const blob = await response.blob();
+      audioBlobUrl = URL.createObjectURL(blob);
+      audio.src = audioBlobUrl;
+      
+      // Enable play controls
+      isAudioLoaded = true;
+      playBtn.disabled = false;
+      playBtn.style.opacity = "";
+      playBtn.style.cursor = "";
+      playBtn.title = "재생";
+    } catch (err) {
+      console.error("Failed to load audio blob, falling back to direct URL:", err);
+      // Fallback
+      audio.src = downloadUrl;
+      isAudioLoaded = true;
+      playBtn.disabled = false;
+      playBtn.style.opacity = "";
+      playBtn.style.cursor = "";
+      playBtn.title = "재생 (대체 연결)";
+    }
+  }
+  
+  loadAudioBlob();
 
   // Handle Play/Pause Click
   playBtn.addEventListener("click", () => {
+    if (!isAudioLoaded) return;
     if (audio.paused) {
       // Pause all other audio players on page
       document.querySelectorAll("audio").forEach(a => a.pause());
+      // Reset pause icon classes on all other buttons
+      document.querySelectorAll(".play-pause-btn").forEach(btn => {
+        if (btn !== playBtn) {
+          const pi = btn.querySelector(".play-icon");
+          const pa = btn.querySelector(".pause-icon");
+          if (pi && pa) {
+            pi.classList.remove("hidden");
+            pa.classList.add("hidden");
+          }
+        }
+      });
       // Play this
-      audio.play();
+      audio.play().catch(e => console.error("Playback failed:", e));
       playIcon.classList.add("hidden");
       pauseIcon.classList.remove("hidden");
 
@@ -744,7 +798,7 @@ function createTrackCard(trackNum, seed, downloadUrl) {
   // Action Buttons behavior
   actions.querySelector(".btn-action-download").addEventListener("click", () => {
     const a = document.createElement("a");
-    a.href = downloadUrl;
+    a.href = audioBlobUrl || downloadUrl; // Use local blob URL to bypass ngrok warnings on download
     a.download = `Daon_Track_${trackNum}_Seed_${seed}.mp3`;
     document.body.appendChild(a);
     a.click();
